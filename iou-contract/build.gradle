@@ -9,17 +9,6 @@
 plugins {
     // Apply the java-library plugin to add support for Java Library
     id 'java-library'
-    id 'net.corda.plugins.cordapp'
-}
-
-repositories {
-    // Use jcenter for resolving your dependencies.
-    // You can declare any Maven/Ivy/file repository here.
-    jcenter()
-    maven {
-        url 'https://software.r3.com/artifactory/corda-dependencies'
-        url 'https://software.r3.com/artifactory/corda/'
-    }
 }
 
 dependencies {
@@ -35,11 +24,6 @@ dependencies {
     testImplementation 'junit:junit:4.12'
 }
 
-// Corda serialization requires function parameter names to be included in the class file
-compileJava {
-    options.compilerArgs << '-parameters'
-}
-
 cordapp {
     targetPlatformVersion 4
     minimumPlatformVersion 4
@@ -48,8 +32,5 @@ cordapp {
         vendor "Kaleido Open Source"
         licence "Apache License, Version 2.0"
         versionId 1
-    }
-    signing {
-        enabled true
     }
 }

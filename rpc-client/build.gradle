@@ -12,16 +12,6 @@ plugins {
 
     // Apply the application plugin to add support for building an application
     id 'application'
-    id 'net.corda.plugins.cordapp' version '5.0.8'
-}
-
-repositories {
-    // Use jcenter for resolving your dependencies.
-    // You can declare any Maven/Ivy/file repository here.
-    jcenter()
-    maven {
-        url 'https://software.r3.com/artifactory/corda-dependencies'
-    }
 }
 
 dependencies {
@@ -34,11 +24,6 @@ dependencies {
     cordapp project(':iou-flow')
     // Use JUnit test framework
     testImplementation 'junit:junit:4.12'
-}
-
-// Corda serialization requires function parameter names to be included in the class file
-compileJava {
-    options.compilerArgs << '-parameters'
 }
 
 // Define the main class for the application

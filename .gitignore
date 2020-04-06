@@ -1,8 +1,5 @@
-iou-contract/build
-iou-flow/build
-rpc-client/build
-rpc-client/logs
+# Ignore Gradle project-specific cache directory
+.gradle
 
-*.class
-*.log
-.DS_Store
+# Ignore Gradle build output directory
+build

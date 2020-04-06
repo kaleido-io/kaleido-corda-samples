@@ -15,30 +15,28 @@ mocha integration-test/generate-full-network.js |bunyan
 Then follow the [configuration steps](https://github.com/kaleido-io/photic-cordamanager/blob/master/integration-test/generate-full-network.js#L13) to launch the network based on the generated configurations.
 
 ## Build
-The 3 components are built separately.
+The 3 components can be built together or separately.
 
-The contract code:
+To build everything:
 ```
-cd iou-contract
 ./gradlew build
+```
+The output are in these folders:
+- `iou-contract/build/libs/iou-contract-1.0.jar`
+- `iou-flow/build/libs/iou-flow-1.0.jar`
+- `rpc-client/build/install/bin/rpc-client`
+
+To build each component separately:
+```
+./gradlew :iou-contract:build
+./gradlew :iou-flow:build
+./gradlew :rpc-client:build
+./gradlew :rpc-client:installDist
 ```
 
 You then must sign the jar with a trusted key in the target network. For instance the network map key (_integtration-test-network_/notary/corda/ca/netmapkeystore.jks, alias _cordanetworkmap_), or an identity key from one of the Corda nodes (_integration-test-network_/node1/certificates/nodekeystore.jks, alias _identity-private-key_):
 ```
 jarsigner -keystore ~/Documents/tmp/cordatest/node1/corda/certificates/nodekeystore.jks -storepass $PASS ../iou-contract/build/libs/iou-contract.jar identity-private-key
-```
-The flow code:
-```
-cd iou-flow
-./gradlew build
-jarsigner -keystore ~/Documents/tmp/cordatest/node1/corda/certificates/nodekeystore.jks -storepass $PASS ../iou-flow/build/libs/iou-flow.jar identity-private-key
-```
-
-Finally the RPC client:
-```
-cd rpc-client
-./gradlew build
-./gradlew installDist
 ```
 
 ## Run to Test Issuance of an IOU
