@@ -15,6 +15,8 @@ import net.corda.core.transactions.SignedTransaction;
 import net.corda.core.transactions.TransactionBuilder;
 import net.corda.core.utilities.ProgressTracker;
 import net.corda.core.utilities.ProgressTracker.Step;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static net.corda.core.contracts.ContractsDSL.requireThat;
 
@@ -30,6 +32,8 @@ import static net.corda.core.contracts.ContractsDSL.requireThat;
  * All methods called within the [FlowLogic] sub-class need to be annotated with the @Suspendable annotation.
  */
 public class ExampleFlow {
+    private static final Logger logger = LoggerFactory.getLogger(ExampleFlow.class);
+
     @InitiatingFlow
     @StartableByRPC
     public static class Initiator extends FlowLogic<SignedTransaction> {
@@ -65,6 +69,7 @@ public class ExampleFlow {
         );
 
         public Initiator(int iouValue, Party otherParty) {
+            logger.info("Initiator constructor parameters: {}, {}", iouValue, otherParty.toString());
             this.iouValue = iouValue;
             this.otherParty = otherParty;
         }

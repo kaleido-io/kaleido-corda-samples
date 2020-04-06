@@ -36,5 +36,10 @@ dependencies {
     testImplementation 'junit:junit:4.12'
 }
 
+// Corda serialization requires function parameter names to be included in the class file
+compileJava {
+    options.compilerArgs << '-parameters'
+}
+
 // Define the main class for the application
 mainClassName = 'io.kaleido.ClientRpcExample'
