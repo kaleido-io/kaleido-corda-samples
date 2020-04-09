@@ -19,7 +19,7 @@ The 3 components can be built together or separately.
 
 To build everything:
 ```
-./gradlew build
+./gradlew buildAll
 ```
 The output are in these folders:
 - `iou-contract/build/libs/iou-contract-1.0.jar`
