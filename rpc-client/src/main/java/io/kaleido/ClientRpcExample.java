@@ -16,8 +16,11 @@ import net.corda.core.utilities.NetworkHostAndPort;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
+import java.util.Scanner;
 import io.kaleido.utils.CliArgs;
 import io.kaleido.state.IOUState;
 
@@ -72,15 +75,33 @@ class ClientRpcExample {
         logger.info("Initiating the IoU flow...");
         try {
             if (borrowerId == null) {
-                throw new IllegalArgumentException("To issue new IoU, please provide a unique lookup string that can identity the borrower, with -borrower, using the borrower node Id would be a good idea");
+                logger.info("To issue new IoU, a borrower is needed. You can specify a unique search string with -borrower (using the borrower node Id would be a good idea), or select from the discovered list of parties below.");
+                borrowerId = "";
             }
             final Set<Party> parties = cordaRPCOperations.partiesFromName(borrowerId, false);
+            Party borrower = null;
             if (parties.size() < 1) {
-                logger.error("Failed to find borrower party");
-                throw new IllegalArgumentException();
+                throw new IllegalArgumentException("Failed to find a network party that matches borrower");
+            } else {
+                if (borrowerId == "") {
+                    logger.info("Pick from the following parties:");
+                    ArrayList<Party> selections = new ArrayList<Party>();
+                    int idx = 0;
+                    Iterator<Party> itr = parties.iterator();
+                    while (itr.hasNext()) {
+                        final Party b = itr.next();
+                        logger.info("\t{}: {}", idx++, b.toString());
+                        selections.add(b);
+                    }
+                    Scanner in = new Scanner(System.in);
+                    String s = in.nextLine();
+                    int index = Integer.parseInt(s);
+                    logger.info("Your selection is {}", selections.get(index));
+                    borrower = selections.get(index);
+                } else {
+                    borrower = parties.iterator().next();
+                }
             }
-            logger.info("Size of parties: {}", parties.size());
-            final Party borrower = parties.iterator().next();
             logger.info("Borrower party: {}", borrower.toString());
             FlowHandle<SignedTransaction> flowHandle = null;
             try {
