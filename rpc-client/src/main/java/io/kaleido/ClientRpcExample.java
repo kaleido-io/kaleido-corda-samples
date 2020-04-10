@@ -58,20 +58,21 @@ class ClientRpcExample {
         logger.info(cordaRPCOperations.notaryIdentities().toString());
 
         if (newIoU) {
-            issueIoU(cordaRPCOperations, borrowerId);
+            String value = cliArgs.switchValue("-value");
+            if (value == null) {
+                value = "100";
+            }
+            issueIoU(cordaRPCOperations, borrowerId, Integer.parseInt(value));
         }
         if (query) {
             String txId = cliArgs.switchValue("-txId");
-            if (txId == null) {
-                throw new IllegalArgumentException("Must specify '-txId' to query");
-            }
             query(txId, cordaRPCOperations);
         }
 
         connection.notifyServerAndClose();
     }
 
-    private static void issueIoU(final CordaRPCOps cordaRPCOperations, String borrowerId) {
+    private static void issueIoU(final CordaRPCOps cordaRPCOperations, String borrowerId, int value) {
         logger.info("Initiating the IoU flow...");
         try {
             if (borrowerId == null) {
@@ -105,7 +106,7 @@ class ClientRpcExample {
             logger.info("Borrower party: {}", borrower.toString());
             FlowHandle<SignedTransaction> flowHandle = null;
             try {
-                flowHandle = cordaRPCOperations.startFlowDynamic(ExampleFlow.Initiator.class, 100, borrower);
+                flowHandle = cordaRPCOperations.startFlowDynamic(ExampleFlow.Initiator.class, value, borrower);
             } catch(CordaRuntimeException cre) {
                 logger.error("Failed to start the flow", cre);
             }
@@ -125,15 +126,15 @@ class ClientRpcExample {
         try {
             Vault.Page<IOUState> result = cordaRPCOperations.vaultQuery(IOUState.class);
             List<StateAndRef<IOUState>> states = result.getStates();
-            logger.info("Number of IOU states returned from query: {}", states.size());
+            logger.info("Number of IOU transactions returned from query: {}", states.size());
             for (StateAndRef<IOUState> state : states) {
-                if (state.getRef().getTxhash().toString().equals(txId)) {
-                    logger.info("Found state by transaction hash:", state);
-                    TransactionState<IOUState> s = state.getState();
-                    logger.info("\tNotary: {}", s.getNotary());
-                    logger.info("\tValue: {}", s.getData().getValue());
-                    logger.info("\tIoU lender: {}", s.getData().getLender());
-                    logger.info("\tIoU borrower: {}", s.getData().getBorrower());
+                TransactionState<IOUState> s = state.getState();
+                if (txId == null) {
+                    logger.info("Id: {}", state.getRef().getTxhash());
+                    printStateDetails(s);
+                } else if (state.getRef().getTxhash().toString().equals(txId)) {
+                    logger.info("Found transaction by hash: {}", txId);
+                    printStateDetails(s);
                 }
             }
         } catch(Exception e) {
@@ -141,4 +142,10 @@ class ClientRpcExample {
         }
     }
 
+    private static void printStateDetails(TransactionState<IOUState> s) {
+        logger.info("\tNotary: {}", s.getNotary());
+        logger.info("\tValue: {}", s.getData().getValue());
+        logger.info("\tIoU lender: {}", s.getData().getLender());
+        logger.info("\tIoU borrower: {}", s.getData().getBorrower());
+    }
 }
