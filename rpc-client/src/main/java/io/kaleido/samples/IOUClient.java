@@ -24,13 +24,7 @@ import net.corda.core.transactions.SignedTransaction;
 public class IOUClient {
     private static final Logger logger = LoggerFactory.getLogger(IOUClient.class);
 
-    private final CordaRPCOps rpcOps;
-
-    public IOUClient(final CordaRPCOps rpcOps) {
-        this.rpcOps = rpcOps;
-    }
-
-    public Party getBorrowerParty(String borrowerId) {
+    public Party getBorrowerParty(String borrowerId, CordaRPCOps rpcOps) {
         if (borrowerId == null) {
             logger.info(
                     "To issue new IoU, a borrower is needed. You can specify a unique search string with -borrower-id (using the borrower node Id would be a good idea), or select from the discovered list of parties below.");
@@ -65,7 +59,7 @@ public class IOUClient {
         return borrower;
     }
 
-    public boolean issueIoU(Party borrower, final int value) {
+    public boolean issueIoU(Party borrower, final int value, CordaRPCOps rpcOps) {
         logger.info("Initiating the IoU flow...");
         CordaFuture<SignedTransaction> future;
         try {
@@ -98,7 +92,7 @@ public class IOUClient {
         return true;
     }
 
-    public void query(final String txId) {
+    public void query(final String txId, CordaRPCOps rpcOps) {
         try {
             Vault.Page<IOUState> result = rpcOps.vaultQuery(IOUState.class);
             final List<StateAndRef<IOUState>> states = result.getStates();

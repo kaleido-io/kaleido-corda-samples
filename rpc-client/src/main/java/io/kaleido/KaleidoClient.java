@@ -68,7 +68,6 @@ public class KaleidoClient implements Callable<Integer> {
         final NetworkHostAndPort nodeAddress = NetworkHostAndPort.parse(url);
         final CordaRPCClient client = new CordaRPCClient(nodeAddress);
         final CordaRPCConnection connection = client.start(username, password);
-        final CordaRPCOps rpcOps = connection.getProxy();
 
         StatsDClient statsd = null;
         if (metricsServer != null) {
@@ -80,12 +79,12 @@ public class KaleidoClient implements Callable<Integer> {
 
         if (subcommand.equals("issue")) {
             // prepare with possibly prompting users for the borrower party
-            IOUClient c = new IOUClient(rpcOps);
-            Party borrower = c.getBorrowerParty(borrowerId);
+            IOUClient c = new IOUClient();
+            Party borrower = c.getBorrowerParty(borrowerId, connection.getProxy());
 
             List<Worker> tasks = new ArrayList<Worker>();
             for (int i=0; i<workers; i++) {
-                Worker w = new Worker(borrower, value, loops, rpcOps, i+1, statsd);
+                Worker w = new Worker(borrower, value, loops, connection, i+1, statsd);
                 tasks.add(w);
             }
 
@@ -119,7 +118,7 @@ public class KaleidoClient implements Callable<Integer> {
             System.out.printf("\tElapsed time: %s seconds\n", elapsedTime);
             System.out.printf("\tTPS: %s\n", (totalSuccesses + totalFailures) / elapsedTime);
          } else if (subcommand.equals("query")) {
-            Future<String> result = this.queryTx(rpcOps, txId);
+            Future<String> result = this.queryTx(connection.getProxy(), txId);
             result.get();
         }
 
@@ -128,8 +127,8 @@ public class KaleidoClient implements Callable<Integer> {
 
     private Future<String> queryTx(CordaRPCOps rpcOps, String txId) {
         return executor.submit(() -> {
-            IOUClient rpc = new IOUClient(rpcOps);
-            rpc.query(txId);
+            IOUClient rpc = new IOUClient();
+            rpc.query(txId, rpcOps);
             return "success";
         });
     }
