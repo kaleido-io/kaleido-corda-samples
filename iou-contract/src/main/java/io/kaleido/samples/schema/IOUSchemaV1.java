@@ -1,4 +1,4 @@
-package io.kaleido.schema;
+package io.kaleido.samples.schema;
 
 import com.google.common.collect.ImmutableList;
 import net.corda.core.schemas.MappedSchema;

@@ -1,16 +1,16 @@
-package io.kaleido.contract;
+package io.kaleido.samples.contract;
 
-import io.kaleido.state.IOUState;
+import static net.corda.core.contracts.ContractsDSL.requireSingleCommand;
+import static net.corda.core.contracts.ContractsDSL.requireThat;
+
+import java.util.stream.Collectors;
+
+import io.kaleido.samples.state.IOUState;
 import net.corda.core.contracts.CommandData;
 import net.corda.core.contracts.CommandWithParties;
 import net.corda.core.contracts.Contract;
 import net.corda.core.identity.AbstractParty;
 import net.corda.core.transactions.LedgerTransaction;
-
-import java.util.stream.Collectors;
-
-import static net.corda.core.contracts.ContractsDSL.requireSingleCommand;
-import static net.corda.core.contracts.ContractsDSL.requireThat;
 
 /**
  * A implementation of a basic smart contract in Corda.
@@ -25,7 +25,7 @@ import static net.corda.core.contracts.ContractsDSL.requireThat;
  * All contracts must sub-class the [Contract] interface.
  */
 public class IOUContract implements Contract {
-    public static final String ID = "io.kaleido.contract.IOUContract";
+    public static final String ID = "io.kaleido.samples.contract.IOUContract";
 
     /**
      * The verify() function of all the states' contracts must not throw an exception for a transaction to be

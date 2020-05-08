@@ -15,10 +15,12 @@ plugins {
 }
 
 dependencies {
-    implementation 'net.corda:corda-core:4.4'
-    implementation "net.corda:corda-rpc:4.4"
-    implementation 'net.corda:corda:4.4'
-    implementation "org.slf4j:slf4j-simple:1.7.30"
+    compile 'net.corda:corda-core:4.4'
+    compile "net.corda:corda-rpc:4.4"
+    compile 'net.corda:corda:4.4'
+    compile "org.slf4j:slf4j-simple:1.7.30"
+    compile "info.picocli:picocli:4.2.0"
+    compile "com.timgroup:java-statsd-client:3.0.1"
 
     cordapp project(':iou-contract')
     cordapp project(':iou-flow')
@@ -27,4 +29,5 @@ dependencies {
 }
 
 // Define the main class for the application
-mainClassName = 'io.kaleido.ClientRpcExample'
+mainClassName = 'io.kaleido.KaleidoClient'
+cordapp.signing.enabled false

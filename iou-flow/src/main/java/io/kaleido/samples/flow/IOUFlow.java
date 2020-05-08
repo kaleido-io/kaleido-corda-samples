@@ -1,24 +1,35 @@
-package io.kaleido.flow;
+package io.kaleido.samples.flow;
 
-import co.paralleluniverse.fibers.Suspendable;
-import io.kaleido.contract.IOUContract;
-import io.kaleido.state.IOUState;
+import static net.corda.core.contracts.ContractsDSL.requireThat;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import co.paralleluniverse.fibers.Suspendable;
+import io.kaleido.samples.contract.IOUContract;
+import io.kaleido.samples.state.IOUState;
 import net.corda.core.contracts.Command;
 import net.corda.core.contracts.ContractState;
 import net.corda.core.contracts.UniqueIdentifier;
 import net.corda.core.crypto.SecureHash;
-import net.corda.core.flows.*;
+import net.corda.core.flows.CollectSignaturesFlow;
+import net.corda.core.flows.FinalityFlow;
+import net.corda.core.flows.FlowException;
+import net.corda.core.flows.FlowLogic;
+import net.corda.core.flows.FlowSession;
+import net.corda.core.flows.InitiatedBy;
+import net.corda.core.flows.InitiatingFlow;
+import net.corda.core.flows.ReceiveFinalityFlow;
+import net.corda.core.flows.SignTransactionFlow;
+import net.corda.core.flows.StartableByRPC;
 import net.corda.core.identity.Party;
 import net.corda.core.transactions.SignedTransaction;
 import net.corda.core.transactions.TransactionBuilder;
 import net.corda.core.utilities.ProgressTracker;
 import net.corda.core.utilities.ProgressTracker.Step;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import static net.corda.core.contracts.ContractsDSL.requireThat;
 
 /**
  * This flow allows two parties (the [Initiator] and the [Acceptor]) to come to an agreement about the IOU encapsulated
@@ -31,8 +42,8 @@ import static net.corda.core.contracts.ContractsDSL.requireThat;
  *
  * All methods called within the [FlowLogic] sub-class need to be annotated with the @Suspendable annotation.
  */
-public class ExampleFlow {
-    private static final Logger logger = LoggerFactory.getLogger(ExampleFlow.class);
+public class IOUFlow {
+    private static final Logger logger = LoggerFactory.getLogger(IOUFlow.class);
 
     @InitiatingFlow
     @StartableByRPC
