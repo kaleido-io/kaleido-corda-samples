@@ -68,6 +68,7 @@ public class KaleidoClient implements Callable<Integer> {
         final NetworkHostAndPort nodeAddress = NetworkHostAndPort.parse(url);
         final CordaRPCClient client = new CordaRPCClient(nodeAddress);
         final CordaRPCConnection connection = client.start(username, password);
+        final IOUClient iouClient = new IOUClient();
 
         StatsDClient statsd = null;
         if (metricsServer != null) {
@@ -84,7 +85,7 @@ public class KaleidoClient implements Callable<Integer> {
 
             List<Worker> tasks = new ArrayList<Worker>();
             for (int i=0; i<workers; i++) {
-                Worker w = new Worker(borrower, value, loops, connection, i+1, statsd);
+                Worker w = new Worker(borrower, value, loops, iouClient, connection, i+1, statsd);
                 tasks.add(w);
             }
 

@@ -18,13 +18,15 @@ public class Worker implements Callable<Result> {
     private Party borrower;
     private int value;
     private int iterations;
+    private IOUClient client;
     private CordaRPCConnection connection;
     private int workerId;
     private StatsDClient statsd;
 
-    public Worker(Party borrower, int value, int loops, CordaRPCConnection connection, int workerId, StatsDClient statsd) {
+    public Worker(Party borrower, int value, int loops, IOUClient client, CordaRPCConnection connection, int workerId, StatsDClient statsd) {
         this.iterations = loops;
         this.connection = connection;
+        this.client = client;
         this.borrower = borrower;
         this.value = value;
         this.workerId = workerId;
@@ -39,11 +41,10 @@ public class Worker implements Callable<Result> {
         // iteration 0 means going indefinitely
         while (iterations <= 0 || i < iterations) {
             logger.info("Sending IoU issuing transaction #{} (worker #{})", i+1, workerId);
-            IOUClient rpc = new IOUClient();
             // the issue transaction flows is made synchronous, the get() call
             // blocks on the future that only resolves after the tx has been finalized
             submitStats("tx.sub");
-            boolean success = rpc.issueIoU(borrower, value, rpcOps);
+            boolean success = client.issueIoU(borrower, value, rpcOps);
             if (success) {
                 logger.info("IoU issuing transaction #{} (worker #{}) successfully finalized", i+1, workerId);
                 submitStats("tx.sent");;
