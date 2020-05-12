@@ -1,5 +1,8 @@
-# corda-samples
+# Kaleido sample code for Corda
+
 Sample code for development components of a Corda App: contracts, flows and rpc-clients, based on JDK 11
+
+© Copyright 2020 Kaleido
 
 ## Pre-reqs
 - JDK 11 (such as from [https://adoptopenjdk.net/](https://gradle.org/install/))
