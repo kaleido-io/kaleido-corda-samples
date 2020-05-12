@@ -53,15 +53,35 @@ You will need to sign the jars yourself with the node identity key. Below is a s
 jarsigner -keystore /corda/certificates/nodekeystore.jks -storepass $PASS ./iou-contract/build/libs/iou-contract.jar identity-private-key
 ```
 
-## Run to Test Issuance of an IOU
+## Run
+The program supports the following commands and switches:
+
+| Command | Parameter | Usage |
+|---------|-----------|-------|
+| issue | | Issue a new IoU |
+|       | `-u`, `--url`| URL of the target Corda node or the local Kaleido bridge endpoint |
+|       | `-n`, `--username`| username for authentiation |
+|       | `-p`, `--password`| password for authentiation |
+|       | `-b`, `--borrower-id`| Name of the borrower to issue the IoU to, can be a partial search string |
+|       | `-v`, `--value`| Value of the issued IoU contract |
+|       | `-w`, `--workers`| Number of concurrent workers, default 1 |
+|       | `-l`, `--loops`| Loops each worker executes before exiting, default 1 (0=infinite) |
+| query | | Query a past IoU issuance transaction |
+|       | `-u`, `--url`| URL of the target Corda node or the local Kaleido bridge endpoint |
+|       | `-n`, `--username`| username for authentiation |
+|       | `-p`, `--password`| password for authentiation |
+|       | `-i`, `--tx-id`| Transaction id of an existing transaction |
+
+
+### Test Issuance of an IOU
 To create a new IoU from the lender and have the borrower sign it and for the notary to notarize it:
 ```
-$ rpc-client/build/install/rpc-client/bin/rpc-client issue -u localhost:10011 -username user1 -password test
+$ rpc-client/build/install/rpc-client/bin/rpc-client issue -u localhost:10011 -n user1 -p test
 ```
 
 The client will discover all the participants in the network and prompt you for a node as the counterprise (borrower), make sure to pick the other node you created in the network, not the node you are connected to or the notary.
 
-## Query Past Transactions
+### Query Past Transactions
 To query a completed transaction, copy the transaction ID from the output above and use it as the value of `-i`:
 ```
 $ rpc-client/build/install/rpc-client/bin/rpc-client query -u localhost:10011 -n user1 -p test -i 311E4723F5B1C647BCD3472BC6097E708487331100A36ACAC821C22D7DC46D22
