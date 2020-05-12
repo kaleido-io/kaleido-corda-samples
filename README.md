@@ -9,13 +9,13 @@ Sample code for development components of a Corda App: contracts, flows and rpc-
 - gradle ([https://gradle.org/install/](https://gradle.org/install/))
 
 ## Set up the target Corda network
-The easiest way to get a local Corda network running, according to the way Kaleido is building them, is by checking out the repository `photic-cordamanager` and run the integration test.
-```
-cd photic-cordamanager
-mocha integration-test/generate-full-network.js |bunyan
-```
+Go to [kaleido.io](https://console.kaleido.io), sign up and create a Corda blockchain environment with at least two user Corda nodes (the platform with create a 3rd node as the notary for you, as a fully managed setup).
 
-Then follow the [configuration steps](https://github.com/kaleido-io/photic-cordamanager/blob/master/integration-test/generate-full-network.js#L13) to launch the network based on the generated configurations.
+Define users and role for each node you want to send transactions to.
+
+Set up the Kaleido bridge and running it locally on your laptop, so that your RPC client program can communicate with your Corda node running in Kaleido.
+
+Go to the next step to build the IoU contract and flow jars.
 
 ## Build
 The 3 components can be built together or separately.
@@ -24,12 +24,14 @@ To build everything:
 ```
 ./gradlew buildAll
 ```
+
 The output are in these folders:
 - `iou-contract/build/libs/iou-contract-1.0.jar`
 - `iou-flow/build/libs/iou-flow-1.0.jar`
 - `rpc-client/build/install/bin/rpc-client`
 
 To build each component separately:
+
 ```
 ./gradlew :iou-contract:build
 ./gradlew :iou-flow:build
@@ -37,33 +39,33 @@ To build each component separately:
 ./gradlew :rpc-client:installDist
 ```
 
-You then must sign the jar with a trusted key in the target network. For instance the network map key (_integtration-test-network_/notary/corda/ca/netmapkeystore.jks, alias _cordanetworkmap_), or an identity key from one of the Corda nodes (_integration-test-network_/node1/certificates/nodekeystore.jks, alias _identity-private-key_):
+## Deploy
+Kaleido CorDapp management will automatically sign the contract and flow jars when you use the platform to deploy them to your Corda environment in Kaleido. If you are using this sample against a locally set up Corda network, you must sign the jars yourself in order to deploy them.
+
+### Deploying to Corda networks in Kaleido
+Using the Kaleido Console UI or APIs, you can easily upload the unsigned jars into Kaleido's contract management and promote them to your Corda environment. Then you can decide when to accept them into your Corda nodes, and will be prompted to restart the Corda server to pick up the new jars. Kaleido will make sure the jars get properly signed.
+
+
+### Deploying to a local Corda network
+You will need to sign the jars yourself with the node identity key. Below is a sample command to sign:
+
 ```
-jarsigner -keystore ~/Documents/tmp/cordatest/node1/corda/certificates/nodekeystore.jks -storepass $PASS ../iou-contract/build/libs/iou-contract.jar identity-private-key
+jarsigner -keystore /corda/certificates/nodekeystore.jks -storepass $PASS ./iou-contract/build/libs/iou-contract.jar identity-private-key
 ```
 
 ## Run to Test Issuance of an IOU
 To create a new IoU from the lender and have the borrower sign it and for the notary to notarize it:
 ```
-$ rpc-client/build/install/rpc-client/bin/rpc-client -url localhost:10011 -username user1 -password test -newIoU
-[main] INFO net.corda.client.rpc.internal.RPCClient - Startup took 1201 msec
-[main] INFO io.kaleido.ClientRpcExample - Calling node for current time...
-[main] INFO io.kaleido.ClientRpcExample - 2020-04-06T14:21:46.773364Z
-[main] INFO io.kaleido.ClientRpcExample - Calling node for node info...
-[main] INFO io.kaleido.ClientRpcExample - NodeInfo(addresses=[zzmrepgprk.zzdrbkw7k1.kaleido.network:10000], legalIdentitiesAndCerts=[CN=Node of zzmrepgprk for zzdrbkw7k1, O=Kaleido, L=Raleigh, C=US], platformVersion=6, serial=1586061213623)
-[main] INFO io.kaleido.ClientRpcExample - Calling node for notary information...
-[main] INFO io.kaleido.ClientRpcExample - [CN=Node of zzmreppmqy for zzdrbkw7k1, O=Kaleido, L=Raleigh, C=US]
-[main] INFO io.kaleido.ClientRpcExample - Initiating the IoU flow...
-[main] INFO io.kaleido.ClientRpcExample - Size of parties: 1
-[main] INFO io.kaleido.ClientRpcExample - Borrower party: CN=Node of zzabcdefgh for zzdrbkw7k1, O=Kaleido, L=Raleigh, C=US
-[main] INFO io.kaleido.ClientRpcExample - Started flow, handle: FlowHandleImpl(id=[b2db26eb-0a8a-4f71-bd79-d42e8b3ca072], returnValue=net.corda.core.internal.concurrent.CordaFutureImpl@12010fd1)
-[main] INFO io.kaleido.ClientRpcExample - Signed tx: SignedTransaction(id=311E4723F5B1C647BCD3472BC6097E708487331100A36ACAC821C22D7DC46D22)
-[main] INFO io.kaleido.ClientRpcExample - IOUState(value=100, lender=CN=Node of zzmrepgprk for zzdrbkw7k1, O=Kaleido, L=Raleigh, C=US, borrower=CN=Node of zzabcdefgh for zzdrbkw7k1, O=Kaleido, L=Raleigh, C=US, linearId=aa6a3f4d-a5eb-45de-9412-3df76b634638)
+$ rpc-client/build/install/rpc-client/bin/rpc-client issue -u localhost:10011 -username user1 -password test
 ```
 
-To query the completed transaction, copy the transaction ID from the output above and use it as the value of `-txId`:
+The client will discover all the participants in the network and prompt you for a node as the counterprise (borrower), make sure to pick the other node you created in the network, not the node you are connected to or the notary.
+
+## Query Past Transactions
+To query a completed transaction, copy the transaction ID from the output above and use it as the value of `-i`:
 ```
-$ rpc-client/build/install/rpc-client/bin/rpc-client -url localhost:10011 -username user1 -password test -query -txId 311E4723F5B1C647BCD3472BC6097E708487331100A36ACAC821C22D7DC46D22
+$ rpc-client/build/install/rpc-client/bin/rpc-client query -u localhost:10011 -n user1 -p test -i 311E4723F5B1C647BCD3472BC6097E708487331100A36ACAC821C22D7DC46D22
+
 [main] INFO net.corda.client.rpc.internal.RPCClient - Startup took 1197 msec
 [main] INFO io.kaleido.ClientRpcExample - Calling node for current time...
 [main] INFO io.kaleido.ClientRpcExample - 2020-04-06T15:48:07.444985Z
