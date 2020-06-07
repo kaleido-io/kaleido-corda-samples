@@ -35,7 +35,6 @@ import org.slf4j.LoggerFactory;
 import io.kaleido.samples.IOUClient;
 import net.corda.client.rpc.CordaRPCClient;
 import net.corda.client.rpc.CordaRPCConnection;
-import net.corda.core.identity.Party;
 import net.corda.core.messaging.CordaRPCOps;
 import net.corda.core.utilities.NetworkHostAndPort;
 import picocli.CommandLine;
@@ -58,8 +57,11 @@ public class KaleidoClient implements Callable<Integer> {
     @Option(names = {"-p", "--password"}, description = "password for authentiation")
     private String password;
 
-    @Option(names = {"-b", "--borrower-id"}, description = "Name of the borrower to issue the IoU to, can be a partial search string")
-    private String borrowerId;
+    @Option(names = {"-b", "--borrower-account-name"}, description = "Name of the borrower account to issue the IoU to")
+    private String borrowerAcctName;
+
+    @Option(names = {"-b", "--lender-account-name"}, description = "Name of the lender account to issue the IoU to")
+    private String lenderAcctName;
 
     @Option(names = {"-v", "--value"}, description = "Value of the issued IoU contract")
     private Integer value = 100;
@@ -97,11 +99,9 @@ public class KaleidoClient implements Callable<Integer> {
         if (subcommand.equals("issue")) {
             // prepare with possibly prompting users for the borrower party
             IOUClient c = new IOUClient();
-            Party borrower = c.getBorrowerParty(borrowerId, connection.getProxy());
-
             List<Worker> tasks = new ArrayList<Worker>();
             for (int i=0; i<workers; i++) {
-                Worker w = new Worker(borrower, value, loops, iouClient, connection, i+1, statsd);
+                Worker w = new Worker(borrowerAcctName, lenderAcctName, value, loops, iouClient, connection, i+1, statsd);
                 tasks.add(w);
             }
 

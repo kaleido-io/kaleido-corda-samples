@@ -23,49 +23,13 @@ import net.corda.core.transactions.SignedTransaction;
 
 public class IOUClient {
     private static final Logger logger = LoggerFactory.getLogger(IOUClient.class);
-
-    public Party getBorrowerParty(String borrowerId, CordaRPCOps rpcOps) {
-        if (borrowerId == null) {
-            logger.info(
-                    "To issue new IoU, a borrower is needed. You can specify a unique search string with -borrower-id (using the borrower node Id would be a good idea), or select from the discovered list of parties below.");
-            borrowerId = "";
-        }
-        final Set<Party> parties = rpcOps.partiesFromName(borrowerId, false);
-        Party borrower = null;
-        if (parties.size() < 1) {
-            throw new IllegalArgumentException("Failed to find a network party that matches borrower");
-        } else {
-            logger.info("Found {} parties in the network matching the borrower id {}", parties.size(), borrowerId);
-            if (borrowerId == "") {
-                logger.info("Pick from the following parties:");
-                final ArrayList<Party> selections = new ArrayList<Party>();
-                int idx = 0;
-                final Iterator<Party> itr = parties.iterator();
-                while (itr.hasNext()) {
-                    final Party b = itr.next();
-                    logger.info("\t{}: {}", idx++, b.toString());
-                    selections.add(b);
-                }
-                final Scanner in = new Scanner(System.in);
-                final String s = in.nextLine();
-                final int index = Integer.parseInt(s);
-                logger.info("Your selection is {}", selections.get(index));
-                borrower = selections.get(index);
-            } else {
-                borrower = parties.iterator().next();
-            }
-        }
-        logger.info("Borrower party: {}", borrower.toString());
-        return borrower;
-    }
-
-    public boolean issueIoU(Party borrower, final int value, CordaRPCOps rpcOps) {
+    public boolean issueIoU(String borrowerAccount, String lenderAccount, final int value, CordaRPCOps rpcOps) {
         logger.info("Initiating the IoU flow...");
         CordaFuture<SignedTransaction> future;
         try {
             FlowHandle<SignedTransaction> flowHandle = null;
             try {
-                flowHandle = rpcOps.startFlowDynamic(IOUFlow.Initiator.class, value, borrower);
+                flowHandle = rpcOps.startFlowDynamic(IOUFlow.Initiator.class, value, borrowerAccount, lenderAccount);
             } catch (final CordaRuntimeException cre) {
                 logger.error("Failed to start the flow", cre);
             }

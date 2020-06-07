@@ -17,6 +17,7 @@ dependencies {
 
     // these dependencies will NOT be included in the contract jar
     cordaCompile 'net.corda:corda-core:4.4'
+    cordaCompile "com.r3.corda.lib.accounts:accounts-contracts:1.0"
     // This dependency is used internally, and not exposed to consumers on their own compile classpath.
     implementation 'com.google.guava:guava:26.0-jre'
 

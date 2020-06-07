@@ -1,3 +1,5 @@
+
+
 plugins {
   id 'net.corda.plugins.cordapp' version '5.0.8'
 }
@@ -9,8 +11,9 @@ allprojects {
       jcenter()
       maven {
           url 'https://software.r3.com/artifactory/corda-dependencies'
-          url 'https://software.r3.com/artifactory/corda/'
-      }
+          }
+      maven { url 'https://software.r3.com/artifactory/corda' }
+      maven { url 'https://software.r3.com/artifactory/corda-lib' }
   }
 
   // Corda serialization requires function parameter names to be included in the class file
