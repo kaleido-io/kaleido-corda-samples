@@ -1,4 +1,5 @@
 package io.kaleido.samples;
+import java.security.PublicKey;
 import java.util.*;
 
 import io.kaleido.samples.flow.NewKeyForAccount;
@@ -87,9 +88,9 @@ public class AccountUtils {
 
     public boolean createNewKeyForAccount(UUID accountId, CordaRPCOps rpcOps) {
         logger.info("Initiating create new key for account flow...");
-        CordaFuture<PartyAndCertificate> future;
+        CordaFuture<PublicKey> future;
         try {
-            FlowHandle<PartyAndCertificate> flowHandle = null;
+            FlowHandle<PublicKey> flowHandle = null;
             try {
                 flowHandle = rpcOps.startFlowDynamic(NewKeyForAccount.class, accountId);
             } catch (final CordaRuntimeException cre) {
@@ -105,8 +106,8 @@ public class AccountUtils {
 
         if (future != null) {
             try {
-                final PartyAndCertificate result = future.get();
-                logger.info("Key generated for the account: {}", result.getOwningKey());
+                final PublicKey result = future.get();
+                logger.info("Key generated for the account: {}", result.toString());
             } catch(final Exception e) {
                 logger.error("Failed to get transaction state", e);
                 return false;

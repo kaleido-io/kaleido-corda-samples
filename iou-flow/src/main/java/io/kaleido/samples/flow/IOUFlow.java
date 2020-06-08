@@ -115,7 +115,7 @@ public class IOUFlow {
 
             //grab the account information
             AccountInfo myAccountInfo = accountService.accountInfo(this.myAccount).get(0).getState().getData();
-            PublicKey myKey = subFlow(new NewKeyForAccount(myAccountInfo.getIdentifier().getId())).getOwningKey();
+            PublicKey myKey = subFlow(new NewKeyForAccount(myAccountInfo.getIdentifier().getId()));
 
             AccountInfo otherPartyAccountInfo = accountService.accountInfo(this.otherPartyAccount).get(0).getState().getData();
             AnonymousParty otherPartyAcctAnonymousParty = subFlow(new RequestKeyForAccount(otherPartyAccountInfo));

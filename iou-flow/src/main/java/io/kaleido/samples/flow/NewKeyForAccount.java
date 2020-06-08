@@ -6,11 +6,13 @@ import net.corda.core.flows.FlowLogic;
 import net.corda.core.flows.StartableByRPC;
 import net.corda.core.flows.StartableByService;
 import net.corda.core.identity.PartyAndCertificate;
+
+import java.security.PublicKey;
 import java.util.*;
 
 @StartableByRPC
 @StartableByService
-public class NewKeyForAccount extends FlowLogic<PartyAndCertificate>{
+public class NewKeyForAccount extends FlowLogic<PublicKey>{
 
     private final UUID accountID;
 
@@ -20,7 +22,7 @@ public class NewKeyForAccount extends FlowLogic<PartyAndCertificate>{
 
     @Override
     @Suspendable
-    public PartyAndCertificate call() throws FlowException {
-        return getServiceHub().getKeyManagementService().freshKeyAndCert(getOurIdentityAndCert(), false, accountID);
+    public PublicKey call() throws FlowException {
+        return getServiceHub().getKeyManagementService().freshKey(accountID);
     }
 }

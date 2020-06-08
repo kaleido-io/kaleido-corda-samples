@@ -29,7 +29,7 @@ public class IOUClient {
         try {
             FlowHandle<SignedTransaction> flowHandle = null;
             try {
-                flowHandle = rpcOps.startFlowDynamic(IOUFlow.Initiator.class, value, borrowerAccount, lenderAccount);
+                flowHandle = rpcOps.startFlowDynamic(IOUFlow.Initiator.class, value, lenderAccount, borrowerAccount);
             } catch (final CordaRuntimeException cre) {
                 logger.error("Failed to start the flow", cre);
             }

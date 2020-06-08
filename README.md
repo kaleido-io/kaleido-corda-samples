@@ -62,7 +62,8 @@ The program supports the following commands and switches:
 |       | `-u`, `--url`| URL of the target Corda node or the local Kaleido bridge endpoint |
 |       | `-n`, `--username`| username for authentiation |
 |       | `-p`, `--password`| password for authentiation |
-|       | `-b`, `--borrower-id`| Name of the borrower to issue the IoU to, can be a partial search string |
+|       | `-b`, `--borrower-account-name`| Name of the borrower's account to issue the IoU to|
+|       | `--lender-account-name` | Name of the your account name to lend|
 |       | `-v`, `--value`| Value of the issued IoU contract |
 |       | `-w`, `--workers`| Number of concurrent workers, default 1 |
 |       | `-l`, `--loops`| Loops each worker executes before exiting, default 1 (0=infinite) |
@@ -71,12 +72,36 @@ The program supports the following commands and switches:
 |       | `-n`, `--username`| username for authentiation |
 |       | `-p`, `--password`| password for authentiation |
 |       | `-i`, `--tx-id`| Transaction id of an existing transaction |
+| account-utils | | Command for invoking accounts related utility function |
+|       | `--create-account` | Sub command for creating a new account |
+|       | `--account-name` | Name of the account to be created or share account info |
+|       | `--share-account-info` | Sub command to share your account's info to other node |
+|       | `--create-account-key` | Sub command to create a new key for the given account uuid |
+|       | `--account-uuid` | UUID of account to generate new key pair for |
+|       | `--party-share-to` | id of the party to share account info with, can be a partial string |
 
+### Account Utilities
+
+#### Create new account
+To create a new account with name `partyA` on a node:
+```
+$ rpc-client/build/install/rpc-client/bin/rpc-client account-utils --create-account --account-name partyA -u localhost:10011 -n user1 -p test
+```
+#### Generate a key pair for a given account
+To create a new key pair for a given account on a node:
+```
+$ rpc-client/build/install/rpc-client/bin/rpc-client account-utils --create-account-key --account-uuid 85b8121c-2bfb-4bec-af36-41a33d87b897 -u localhost:10011 -n user1 -p test
+```
+#### Share account's information with other node
+To share account info with other node so, that they can use it in a flow:
+```
+$ rpc-client/build/install/rpc-client/bin/rpc-client account-utils --share-account-info --account-name partyA  --party-share-to zzgqil3zm1 -u localhost:10011 -n user1 -p test
+```
 
 ### Test Issuance of an IOU
 To create a new IoU from the lender and have the borrower sign it and for the notary to notarize it:
 ```
-$ rpc-client/build/install/rpc-client/bin/rpc-client issue -u localhost:10011 -n user1 -p test
+$ rpc-client/build/install/rpc-client/bin/rpc-client issue --lender-account-name partyA --borrower-account-name partyB --value 98 -u localhost:10011 -n user1 -p test
 ```
 
 The client will discover all the participants in the network and prompt you for a node as the counterprise (borrower), make sure to pick the other node you created in the network, not the node you are connected to or the notary.

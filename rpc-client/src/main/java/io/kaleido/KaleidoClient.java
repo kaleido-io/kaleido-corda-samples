@@ -81,7 +81,7 @@ public class KaleidoClient implements Callable<Integer> {
     @Option(names = {"-b", "--borrower-account-name"}, description = "Name of the borrower account to issue the IoU to")
     private String borrowerAcctName;
 
-    @Option(names = {"-l", "--lender-account-name"}, description = "Name of the lender account to issue the IoU to")
+    @Option(names =  "--lender-account-name", description = "Name of the lender account to issue the IoU to")
     private String lenderAcctName;
 
     @Option(names = {"-v", "--value"}, description = "Value of the issued IoU contract")
