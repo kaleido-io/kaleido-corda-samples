@@ -21,6 +21,7 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -29,6 +30,7 @@ import java.util.concurrent.Future;
 import com.timgroup.statsd.NonBlockingStatsDClient;
 import com.timgroup.statsd.StatsDClient;
 
+import io.kaleido.samples.AccountUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,6 +39,7 @@ import net.corda.client.rpc.CordaRPCClient;
 import net.corda.client.rpc.CordaRPCConnection;
 import net.corda.core.messaging.CordaRPCOps;
 import net.corda.core.utilities.NetworkHostAndPort;
+import net.corda.core.identity.Party;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
@@ -45,22 +48,40 @@ import picocli.CommandLine.Parameters;
 @Command(name = "kldc", mixinStandardHelpOptions = true, version = "1.0",
          description = "Kaleido Client for submitting transactions to Corda networks.")
 public class KaleidoClient implements Callable<Integer> {
-    @Parameters(index = "0", description = "issue, query")
+    @Parameters(index = "0", description = "issue, query, accounts-utils")
     private String subcommand;
+
+    @Option(names = "--create-account", description = "account utility to create new account")
+    private boolean createNewAccount;
+
+    @Option(names = "--account-name", description = "account name to create or share")
+    private String acctName;
+
+    @Option(names = "--create-account-key", description = "account utility to create a new key for a account")
+    private boolean createNewKeyForAccount;
+
+    @Option(names = "--account-uuid", description = "account uuid to create new key pair for")
+    private UUID acctUuid;
+
+    @Option(names = "--share-account-info", description = "account utility to share account-info to other party")
+    private boolean shareAccountInfo;
+
+    @Option(names = "--party-share-to", description = "Id of party to share your account info")
+    private String shareTo;
 
     @Option(names = {"-u", "--url"}, description = "URL of the target Corda node or the local Kaleido bridge endpoint")
     private String url;
 
-    @Option(names = {"-n", "--username"}, description = "username for authentiation")
+    @Option(names = {"-n", "--username"}, description = "username for authentication")
     private String username;
 
-    @Option(names = {"-p", "--password"}, description = "password for authentiation")
+    @Option(names = {"-p", "--password"}, description = "password for authentication")
     private String password;
 
     @Option(names = {"-b", "--borrower-account-name"}, description = "Name of the borrower account to issue the IoU to")
     private String borrowerAcctName;
 
-    @Option(names = {"-b", "--lender-account-name"}, description = "Name of the lender account to issue the IoU to")
+    @Option(names = {"-l", "--lender-account-name"}, description = "Name of the lender account to issue the IoU to")
     private String lenderAcctName;
 
     @Option(names = {"-v", "--value"}, description = "Value of the issued IoU contract")
@@ -87,6 +108,7 @@ public class KaleidoClient implements Callable<Integer> {
         final CordaRPCClient client = new CordaRPCClient(nodeAddress);
         final CordaRPCConnection connection = client.start(username, password);
         final IOUClient iouClient = new IOUClient();
+        final AccountUtils accountUtilsClient = new AccountUtils();
 
         StatsDClient statsd = null;
         if (metricsServer != null) {
@@ -137,6 +159,19 @@ public class KaleidoClient implements Callable<Integer> {
          } else if (subcommand.equals("query")) {
             Future<String> result = this.queryTx(connection.getProxy(), txId);
             result.get();
+        } else if(subcommand.equals("account-utils")) {
+            boolean success = false;
+            if(createNewAccount) {
+                success = accountUtilsClient.createAccount(acctName, connection.getProxy());
+                System.out.println("Account creation result:"+success);
+            } else if(createNewKeyForAccount) {
+                success = accountUtilsClient.createNewKeyForAccount(acctUuid, connection.getProxy());
+                System.out.println("Key for account creation result:"+success);
+            } else if(shareAccountInfo) {
+                Party shareToParty = accountUtilsClient.getPartyFromId(shareTo, connection.getProxy());
+                success = accountUtilsClient.shareAccountTo(acctName, shareToParty, connection.getProxy());
+                System.out.println("Account share result:"+success);
+            }
         }
 
         return 0;

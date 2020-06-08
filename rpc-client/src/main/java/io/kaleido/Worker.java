@@ -25,7 +25,6 @@ import org.slf4j.LoggerFactory;
 
 import io.kaleido.samples.IOUClient;
 import net.corda.client.rpc.CordaRPCConnection;
-import net.corda.core.identity.Party;
 import net.corda.core.messaging.CordaRPCOps;
 
 public class Worker implements Callable<Result> {
