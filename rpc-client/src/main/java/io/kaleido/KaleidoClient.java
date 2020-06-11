@@ -28,13 +28,14 @@ import java.util.concurrent.Future;
 
 import com.timgroup.statsd.NonBlockingStatsDClient;
 import com.timgroup.statsd.StatsDClient;
-
+import io.kaleido.samples.AccountUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
+import java.util.UUID;
 import io.kaleido.samples.IOUClient;
 import net.corda.client.rpc.CordaRPCClient;
 import net.corda.client.rpc.CordaRPCConnection;
+import net.corda.core.identity.AbstractParty;
 import net.corda.core.identity.Party;
 import net.corda.core.messaging.CordaRPCOps;
 import net.corda.core.utilities.NetworkHostAndPort;
@@ -46,8 +47,26 @@ import picocli.CommandLine.Parameters;
 @Command(name = "kldc", mixinStandardHelpOptions = true, version = "1.0",
          description = "Kaleido Client for submitting transactions to Corda networks.")
 public class KaleidoClient implements Callable<Integer> {
-    @Parameters(index = "0", description = "issue, query")
+
+    @Parameters(index = "0", description = "issue, query, account-utils")
     private String subcommand;
+    @Option(names = "--create-account", description = "account utility to create new account")
+    private boolean createNewAccount;
+
+    @Option(names = "--account-name", description = "account name to create or share")
+    private String acctName;
+
+    @Option(names = "--create-account-key", description = "account utility to create a new key for a account")
+    private boolean createNewKeyForAccount;
+
+    @Option(names = "--account-uuid", description = "account uuid to create new key pair for")
+    private UUID acctUuid;
+
+    @Option(names = "--share-account-info", description = "account utility to share account-info to other party")
+    private boolean shareAccountInfo;
+
+    @Option(names = "--party-share-to", description = "Id of party to share your account info")
+    private String shareTo;
 
     @Option(names = {"-u", "--url"}, description = "URL of the target Corda node or the local Kaleido bridge endpoint")
     private String url;
@@ -57,6 +76,15 @@ public class KaleidoClient implements Callable<Integer> {
 
     @Option(names = {"-p", "--password"}, description = "password for authentiation")
     private String password;
+
+    @Option(names = {"--lender-account"}, description = "Name of the account of the issuer of the iou")
+    private String lenderAcctName;
+
+    @Option(names = {"--borrower-account"}, description = "Name of the account of the borrower of the iou")
+    private String borrowerAcctName;
+
+    @Option(names = {"--lender-id"}, description = "Name of the issuer of the iou, can be a partial search string")
+    private String lenderId;
 
     @Option(names = {"-b", "--borrower-id"}, description = "Name of the borrower to issue the IoU to, can be a partial search string")
     private String borrowerId;
@@ -85,6 +113,7 @@ public class KaleidoClient implements Callable<Integer> {
         final CordaRPCClient client = new CordaRPCClient(nodeAddress);
         final CordaRPCConnection connection = client.start(username, password);
         final IOUClient iouClient = new IOUClient();
+        final AccountUtils accountUtilsClient = new AccountUtils();
 
         StatsDClient statsd = null;
         if (metricsServer != null) {
@@ -97,11 +126,22 @@ public class KaleidoClient implements Callable<Integer> {
         if (subcommand.equals("issue")) {
             // prepare with possibly prompting users for the borrower party
             IOUClient c = new IOUClient();
-            Party borrower = c.getBorrowerParty(borrowerId, connection.getProxy());
-
+            AbstractParty lender;
+            if(lenderAcctName != null) {
+                lender = c.getPartyFromAcctName(lenderAcctName, connection.getProxy());
+            }
+            else {
+                lender = c.getPartyFromId(lenderId, connection.getProxy());
+            }
+            AbstractParty borrower;
+            if(borrowerAcctName != null) {
+                borrower = c.getPartyFromAcctName(borrowerAcctName, connection.getProxy());
+            } else {
+                borrower = c.getPartyFromId(borrowerId, connection.getProxy());
+            }
             List<Worker> tasks = new ArrayList<Worker>();
             for (int i=0; i<workers; i++) {
-                Worker w = new Worker(borrower, value, loops, iouClient, connection, i+1, statsd);
+                Worker w = new Worker(lender, borrower, value, loops, iouClient, connection, i+1, statsd);
                 tasks.add(w);
             }
 
@@ -137,6 +177,19 @@ public class KaleidoClient implements Callable<Integer> {
          } else if (subcommand.equals("query")) {
             Future<String> result = this.queryTx(connection.getProxy(), txId);
             result.get();
+        } else if(subcommand.equals("account-utils")) {
+            boolean success = false;
+            if(createNewAccount) {
+                success = accountUtilsClient.createAccount(acctName, connection.getProxy());
+                System.out.println("Account creation result:"+success);
+            } else if(createNewKeyForAccount) {
+                success = accountUtilsClient.createNewKeyForAccount(acctUuid, connection.getProxy());
+                System.out.println("Key for account creation result:"+success);
+            } else if(shareAccountInfo) {
+                Party shareToParty = accountUtilsClient.getPartyFromId(shareTo, connection.getProxy());
+                success = accountUtilsClient.shareAccountTo(acctName, shareToParty, connection.getProxy());
+                System.out.println("Account share result:"+success);
+            }
         }
 
         return 0;
