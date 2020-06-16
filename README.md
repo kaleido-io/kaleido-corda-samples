@@ -27,14 +27,14 @@ To build everything:
 
 The output are in these folders:
 - `contracts/build/libs/contracts-1.0.jar`
-- `workflows/build/libs/workflows-1.0.jar`
+- `flows/build/libs/flows-1.0.jar`
 - `rpc-client/build/install/bin/rpc-client`
 
 To build each component separately:
 
 ```
 ./gradlew :contracts:build
-./gradlew :workflows:build
+./gradlew :flows:build
 ./gradlew :rpc-client:build
 ./gradlew :rpc-client:installDist
 ```
