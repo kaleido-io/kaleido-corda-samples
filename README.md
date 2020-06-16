@@ -92,6 +92,17 @@ $ rpc-client/build/install/rpc-client/bin/rpc-client issue -u localhost:10011 -n
 The client will discover all the participants in the network and prompt you for a node as the counterprise (borrower), make sure to pick the other node you created in the network, not the node you are connected to or the notary.
 
 ### Account Utilities
+This example also works with corda [accounts](https://github.com/corda/accounts). To use accounts, nodes must have required accounts cordapps already installed i.e., `accounts-contracts-1.0.jar`, `accounts-workflows-1.0.jar`, `ci-workflows-1.0.jar` .
+Introduction to accounts is available [here](https://github.com/corda/accounts/blob/master/docs.md). Accounts allow Cordapp developers to divide node's vault into logical sub-vaults, i.e., account is collection of states on a node which are controlled by keys belonging to account.
+Nodes store `AccountInfo` state, which has basic information about an `account` which is. 
+    * Account host, `Party` object, i.e., corda node which this accounts belong to.
+    * Account name, `String`, human readable string to identify account, it doesn't have to be unique at network level. (name, host) tuple is guaranteed to unique at network level.
+    * Account id, `UUID`, 128-bit random ID that should be unique at Network level.
+
+Unlike corda nodes, which have a default key pair associated with them. A newly created account doesn't have a key pair associated with it. A new key pair can be requested for an account using RequestKey flow whenever you want to transact with account.
+Nodes don't know about the accounts of other nodes unless the information is explicitly shared with them. This is done via ShareAccountInfoFlow. 
+
+In order to use IOU issue example with accounts, account utilities can be used to create accounts and share the account info with other nodes.
 
 #### Create new account
 To create a new account with name `partyA` on a node:

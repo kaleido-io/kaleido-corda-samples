@@ -23,7 +23,7 @@ dependencies {
     compile "com.timgroup:java-statsd-client:3.0.1"
 
     cordapp project(':contracts')
-    cordapp project(':workflows')
+    cordapp project(':flows')
     // Use JUnit test framework
     testImplementation 'junit:junit:4.12'
 }

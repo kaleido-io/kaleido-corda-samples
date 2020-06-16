@@ -9,8 +9,12 @@ import co.paralleluniverse.fibers.Suspendable;
 import com.r3.corda.lib.accounts.workflows.services.AccountService;
 import net.corda.core.flows.FlowLogic;;
 import net.corda.core.flows.StartableByRPC;
-
 import java.util.UUID;
+
+/*
+ * Using samples from
+ * https://github.com/corda/samples-java/tree/master/Accounts/supplychain/workflows/src/main/java/com/supplychain/accountUtilities
+ */
 
 @StartableByRPC
 @StartableByService

@@ -8,6 +8,6 @@
  */
 
 rootProject.name = 'rpc-client'
-include ':contracts', ':workflows', 'rpc-client'
+include ':contracts', ':flows', 'rpc-client'
 project(':contracts').projectDir = new File(settingsDir, '../contracts')
-project(':workflows').projectDir = new File(settingsDir, '../workflows')
+project(':flows').projectDir = new File(settingsDir, '../flows')
