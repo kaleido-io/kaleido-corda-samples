@@ -15,7 +15,7 @@ Define users and role for each node you want to send transactions to.
 
 Set up the Kaleido bridge and running it locally on your laptop, so that your RPC client program can communicate with your Corda node running in Kaleido.
 
-Go to the next step to build the IoU contract and flow jars.
+Go to the next step to build the IoU contracts and workflow jars.
 
 ## Build
 The 3 components can be built together or separately.
@@ -26,15 +26,15 @@ To build everything:
 ```
 
 The output are in these folders:
-- `iou-contract/build/libs/iou-contract-1.0.jar`
-- `iou-flow/build/libs/iou-flow-1.0.jar`
+- `contracts/build/libs/contracts-1.0.jar`
+- `flows/build/libs/flows-1.0.jar`
 - `rpc-client/build/install/bin/rpc-client`
 
 To build each component separately:
 
 ```
-./gradlew :iou-contract:build
-./gradlew :iou-flow:build
+./gradlew :contracts:build
+./gradlew :flows:build
 ./gradlew :rpc-client:build
 ./gradlew :rpc-client:installDist
 ```
@@ -50,7 +50,7 @@ Using the Kaleido Console UI or APIs, you can easily upload the unsigned jars in
 You will need to sign the jars yourself with the node identity key. Below is a sample command to sign:
 
 ```
-jarsigner -keystore /corda/certificates/nodekeystore.jks -storepass $PASS ./iou-contract/build/libs/iou-contract.jar identity-private-key
+jarsigner -keystore /corda/certificates/nodekeystore.jks -storepass $PASS ./contracts/build/libs/contracts.jar identity-private-key
 ```
 
 ## Run
@@ -62,7 +62,10 @@ The program supports the following commands and switches:
 |       | `-u`, `--url`| URL of the target Corda node or the local Kaleido bridge endpoint |
 |       | `-n`, `--username`| username for authentiation |
 |       | `-p`, `--password`| password for authentiation |
-|       | `-b`, `--borrower-id`| Name of the borrower to issue the IoU to, can be a partial search string |
+|       | `-b`, `--borrower-id`| X.500 name of the borrower's node to issue the IoU to|
+|       | `--lender-id` | X.500 name  of the your account name to lend|
+|       | `--borrower-account`| Name of the borrower's account to issue the IoU to|
+|       | `--lender-account` | Name of the your account name to lend|
 |       | `-v`, `--value`| Value of the issued IoU contract |
 |       | `-w`, `--workers`| Number of concurrent workers, default 1 |
 |       | `-l`, `--loops`| Loops each worker executes before exiting, default 1 (0=infinite) |
@@ -71,6 +74,13 @@ The program supports the following commands and switches:
 |       | `-n`, `--username`| username for authentiation |
 |       | `-p`, `--password`| password for authentiation |
 |       | `-i`, `--tx-id`| Transaction id of an existing transaction |
+| account-utils | | Command for invoking accounts related utility function |
+|       | `--create-account` | Sub command for creating a new account |
+|       | `--account-name` | Name of the account to be created or share account info |
+|       | `--share-account-info` | Sub command to share your account's info to other node |
+|       | `--create-account-key` | Sub command to create a new key for the given account uuid |
+|       | `--account-uuid` | UUID of account to generate new key pair for |
+|       | `--party-share-to` | id of the party to share account info with, can be a partial string |
 
 
 ### Test Issuance of an IOU
@@ -80,6 +90,52 @@ $ rpc-client/build/install/rpc-client/bin/rpc-client issue -u localhost:10011 -n
 ```
 
 The client will discover all the participants in the network and prompt you for a node as the counterprise (borrower), make sure to pick the other node you created in the network, not the node you are connected to or the notary.
+
+### Account Utilities
+This example also works with corda [accounts](https://github.com/corda/accounts). To use accounts, nodes must have required accounts cordapps already installed i.e., `accounts-contracts-1.0.jar`, `accounts-workflows-1.0.jar`, `ci-workflows-1.0.jar` .
+Introduction to accounts is available [here](https://github.com/corda/accounts/blob/master/docs.md). Accounts allow Cordapp developers to divide node's vault into logical sub-vaults, i.e., account is collection of states on a node which are controlled by keys belonging to account.
+Nodes store `AccountInfo` state, which has basic information about an `account` which is. 
+    * Account host, `Party` object, i.e., corda node which this accounts belong to.
+    * Account name, `String`, human readable string to identify account, it doesn't have to be unique at network level. (name, host) tuple is guaranteed to unique at network level.
+    * Account id, `UUID`, 128-bit random ID that should be unique at Network level.
+
+Unlike corda nodes, which have a default key pair associated with them. A newly created account doesn't have a key pair associated with it. A new key pair can be requested for an account using RequestKey flow whenever you want to transact with account.
+Nodes don't know about the accounts of other nodes unless the information is explicitly shared with them. This is done via ShareAccountInfoFlow. 
+
+In order to use IOU issue example with accounts, account utilities can be used to create accounts and share the account info with other nodes.
+
+#### Create new account
+To create a new account with name `partyA` on a node:
+```
+$ rpc-client/build/install/rpc-client/bin/rpc-client account-utils --create-account --account-name partyA -u localhost:10011 -n user1 -p test
+```
+#### Generate a key pair for a given account
+To create a new key pair for a given account on a node:
+```
+$ rpc-client/build/install/rpc-client/bin/rpc-client account-utils --create-account-key --account-uuid 85b8121c-2bfb-4bec-af36-41a33d87b897 -u localhost:10011 -n user1 -p test
+```
+#### Share account's information with other node
+To share account info with other node so, that they can use it in a flow:
+```
+$ rpc-client/build/install/rpc-client/bin/rpc-client account-utils --share-account-info --account-name partyA  --party-share-to zzgqil3zm1 -u localhost:10011 -n user1 -p test
+```
+
+### Test Issuance of an IOU
+To create a new IoU from the lender and have the borrower sign it and for the notary to notarize it using `account <> account`:
+```
+$ rpc-client/build/install/rpc-client/bin/rpc-client issue --lender-account partyA --borrower-account partyB --value 98 -u localhost:10011 -n user1 -p test
+```
+or To using `node <> node`
+```
+$ rpc-client/build/install/rpc-client/bin/rpc-client issue  --value 98 -u localhost:10011 -n user1 -p test
+```
+The client will discover all the participants in the network and prompt you for a node as the lender and  a counterparty (borrower), make sure to pick the other node you created in the network, not the node you are connected to or the notary.
+
+or To using `node <> account`
+```
+$ rpc-client/build/install/rpc-client/bin/rpc-client issue  --borrower-account partyB --value 98 -u localhost:10011 -n user1 -p test
+```
+The client will discover all the participants in the network and prompt you for a node as the lender and  a counterparty (borrower), make sure to pick the other node you created in the network, not the node you are connected to or the notary.
 
 ### Query Past Transactions
 To query a completed transaction, copy the transaction ID from the output above and use it as the value of `-i`:

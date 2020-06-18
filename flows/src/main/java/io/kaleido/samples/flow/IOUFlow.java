@@ -21,9 +21,15 @@ import static net.corda.core.contracts.ContractsDSL.requireThat;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
+import com.r3.corda.lib.accounts.contracts.states.AccountInfo;
+import com.r3.corda.lib.accounts.workflows.flows.AccountInfoByKey;
+import net.corda.core.contracts.StateAndRef;
+import net.corda.core.identity.AbstractParty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 import co.paralleluniverse.fibers.Suspendable;
 import io.kaleido.samples.contract.IOUContract;
 import io.kaleido.samples.state.IOUState;
@@ -31,6 +37,7 @@ import net.corda.core.contracts.Command;
 import net.corda.core.contracts.ContractState;
 import net.corda.core.contracts.UniqueIdentifier;
 import net.corda.core.crypto.SecureHash;
+import net.corda.core.crypto.TransactionSignature;
 import net.corda.core.flows.CollectSignaturesFlow;
 import net.corda.core.flows.FinalityFlow;
 import net.corda.core.flows.FlowException;
@@ -38,9 +45,11 @@ import net.corda.core.flows.FlowLogic;
 import net.corda.core.flows.FlowSession;
 import net.corda.core.flows.InitiatedBy;
 import net.corda.core.flows.InitiatingFlow;
+import net.corda.core.flows.CollectSignatureFlow;
 import net.corda.core.flows.ReceiveFinalityFlow;
 import net.corda.core.flows.SignTransactionFlow;
 import net.corda.core.flows.StartableByRPC;
+import net.corda.core.identity.AbstractParty;
 import net.corda.core.identity.Party;
 import net.corda.core.transactions.SignedTransaction;
 import net.corda.core.transactions.TransactionBuilder;
@@ -66,7 +75,8 @@ public class IOUFlow {
     public static class Initiator extends FlowLogic<SignedTransaction> {
 
         private final int iouValue;
-        private final Party otherParty;
+        private final AbstractParty lender;
+        private final AbstractParty borrower;
 
         private final Step GENERATING_TRANSACTION = new Step("Generating transaction based on new IOU.");
         private final Step VERIFYING_TRANSACTION = new Step("Verifying contract constraints.");
@@ -95,10 +105,11 @@ public class IOUFlow {
                 FINALISING_TRANSACTION
         );
 
-        public Initiator(int iouValue, Party otherParty) {
-            logger.info("Initiator constructor parameters: {}, {}", iouValue, otherParty.toString());
+        public Initiator(int iouValue, AbstractParty lender, AbstractParty borrower) {
+            logger.info("Initiator constructor 1 parameters: {}, {}, {}", iouValue, lender.toString(), borrower.toString());
             this.iouValue = iouValue;
-            this.otherParty = otherParty;
+            this.lender = lender;
+            this.borrower = borrower;
         }
 
         @Override
@@ -114,12 +125,10 @@ public class IOUFlow {
         public SignedTransaction call() throws FlowException {
             // Obtain a reference to the notary we want to use.
             final Party notary = getServiceHub().getNetworkMapCache().getNotaryIdentities().get(0);
-
             // Stage 1.
             progressTracker.setCurrentStep(GENERATING_TRANSACTION);
-            // Generate an unsigned transaction.
-            Party me = getOurIdentity();
-            IOUState iouState = new IOUState(iouValue, me, otherParty, new UniqueIdentifier());
+            // Generate an unsigned transaction
+            IOUState iouState = new IOUState(iouValue, lender, borrower, new UniqueIdentifier());
             final Command<IOUContract.Commands.Create> txCommand = new Command<>(
                     new IOUContract.Commands.Create(),
                     ImmutableList.of(iouState.getLender().getOwningKey(), iouState.getBorrower().getOwningKey()));
@@ -135,19 +144,27 @@ public class IOUFlow {
             // Stage 3.
             progressTracker.setCurrentStep(SIGNING_TRANSACTION);
             // Sign the transaction.
-            final SignedTransaction partSignedTx = getServiceHub().signInitialTransaction(txBuilder);
+            final SignedTransaction partSignedTx = getServiceHub().signInitialTransaction(txBuilder, Arrays.asList(getOurIdentity().getOwningKey(),lender.getOwningKey()));
 
             // Stage 4.
             progressTracker.setCurrentStep(GATHERING_SIGS);
+            FlowSession otherPartySession = null;
+            if(!(borrower instanceof Party)) {
+                // In case of when borrower is an instance of AnonymousParty, (key belongs to account that node is aware of)
+                StateAndRef<? extends AccountInfo> acctInfo = subFlow(new AccountInfoByKey(borrower.getOwningKey()));
+                final Party host = acctInfo.getState().getData().getHost();
+                otherPartySession = initiateFlow(host);
+            } else {
+                otherPartySession = initiateFlow(borrower);
+            }
             // Send the state to the counterparty, and receive it back with their signature.
-            FlowSession otherPartySession = initiateFlow(otherParty);
-            final SignedTransaction fullySignedTx = subFlow(
-                    new CollectSignaturesFlow(partSignedTx, ImmutableSet.of(otherPartySession), CollectSignaturesFlow.Companion.tracker()));
-
+            List<TransactionSignature> accountToMoveToSignature = (List<TransactionSignature>) subFlow(new CollectSignatureFlow(partSignedTx,
+                    otherPartySession,borrower.getOwningKey()));
+            final SignedTransaction fullySignedTx = partSignedTx.withAdditionalSignatures(accountToMoveToSignature);
             // Stage 5.
             progressTracker.setCurrentStep(FINALISING_TRANSACTION);
             // Notarise and record the transaction in both parties' vaults.
-            return subFlow(new FinalityFlow(fullySignedTx, ImmutableSet.of(otherPartySession)));
+            return subFlow(new FinalityFlow(fullySignedTx, Arrays.asList(otherPartySession).stream().filter(it -> it.getCounterparty() != getOurIdentity()).collect(Collectors.toList())));
         }
     }
 
@@ -164,8 +181,8 @@ public class IOUFlow {
         @Override
         public SignedTransaction call() throws FlowException {
             class SignTxFlow extends SignTransactionFlow {
-                private SignTxFlow(FlowSession otherPartyFlow, ProgressTracker progressTracker) {
-                    super(otherPartyFlow, progressTracker);
+                private SignTxFlow(FlowSession otherPartyFlow) {
+                    super(otherPartyFlow);
                 }
 
                 @Override
@@ -179,9 +196,8 @@ public class IOUFlow {
                     });
                 }
             }
-            final SignTxFlow signTxFlow = new SignTxFlow(otherPartySession, SignTransactionFlow.Companion.tracker());
+            final SignTxFlow signTxFlow = new SignTxFlow(otherPartySession);
             final SecureHash txId = subFlow(signTxFlow).getId();
-
             return subFlow(new ReceiveFinalityFlow(otherPartySession, txId));
         }
     }

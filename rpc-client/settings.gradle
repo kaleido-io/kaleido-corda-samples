@@ -8,6 +8,6 @@
  */
 
 rootProject.name = 'rpc-client'
-include ':iou-contract', ':iou-flow', 'rpc-client'
-project(':iou-contract').projectDir = new File(settingsDir, '../iou-contract')
-project(':iou-flow').projectDir = new File(settingsDir, '../iou-flow')
+include ':contracts', ':flows', 'rpc-client'
+project(':contracts').projectDir = new File(settingsDir, '../contracts')
+project(':flows').projectDir = new File(settingsDir, '../flows')

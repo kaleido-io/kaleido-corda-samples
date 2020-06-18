@@ -20,6 +20,7 @@ import java.util.concurrent.Callable;
 
 import com.timgroup.statsd.StatsDClient;
 
+import net.corda.core.identity.AbstractParty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,7 +32,8 @@ import net.corda.core.messaging.CordaRPCOps;
 public class Worker implements Callable<Result> {
     private static final Logger logger = LoggerFactory.getLogger(KaleidoClient.class);
 
-    private Party borrower;
+    private AbstractParty borrower;
+    private AbstractParty lender;
     private int value;
     private int iterations;
     private IOUClient client;
@@ -39,11 +41,12 @@ public class Worker implements Callable<Result> {
     private int workerId;
     private StatsDClient statsd;
 
-    public Worker(Party borrower, int value, int loops, IOUClient client, CordaRPCConnection connection, int workerId, StatsDClient statsd) {
+    public Worker(AbstractParty lender, AbstractParty borrower, int value, int loops, IOUClient client, CordaRPCConnection connection, int workerId, StatsDClient statsd) {
         this.iterations = loops;
         this.connection = connection;
         this.client = client;
         this.borrower = borrower;
+        this.lender = lender;
         this.value = value;
         this.workerId = workerId;
         this.statsd = statsd;
@@ -60,7 +63,7 @@ public class Worker implements Callable<Result> {
             // the issue transaction flows is made synchronous, the get() call
             // blocks on the future that only resolves after the tx has been finalized
             submitStats("tx.sub");
-            boolean success = client.issueIoU(borrower, value, rpcOps);
+            boolean success = client.issueIoU(lender, borrower, value, rpcOps);
             if (success) {
                 logger.info("IoU issuing transaction #{} (worker #{}) successfully finalized", i+1, workerId);
                 submitStats("tx.sent");;
