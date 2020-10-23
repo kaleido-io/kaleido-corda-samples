@@ -41,9 +41,9 @@ import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
 
 @Command(name = "kldc", mixinStandardHelpOptions = true, version = "1.0",
-         description = "Kaleido Client for submitting transactions to Corda networks.")
+         description = "Main Client for submitting transactions to Corda networks.")
 public class MainClient implements Callable<Integer> {
-    @Parameters(index = "0", description = "issue, query")
+    @Parameters(index = "0", description = "start, query")
     private String subcommand;
 
     @Option(names = {"-u", "--url"}, description = "URL of the target Corda node or the local Kaleido bridge endpoint")
@@ -91,10 +91,10 @@ public class MainClient implements Callable<Integer> {
         // ready to kick off
         executor = Executors.newFixedThreadPool(workers);
 
-        if (subcommand.equals("issue")) {
+        if (subcommand.equals("start")) {
             // prepare with possibly prompting users for the borrower party
             final FooClient c = new FooClient();
-            Party borrower = c.getBorrowerParty(cpty, connection.getProxy());
+            Party borrower = c.getCounterParty(cpty, connection.getProxy());
 
             List<Worker> tasks = new ArrayList<Worker>();
             for (int i=0; i<workers; i++) {

@@ -20,18 +20,18 @@ import net.corda.core.transactions.SignedTransaction;
 public class FooClient {
     private static final Logger logger = LoggerFactory.getLogger(FooClient.class);
 
-    public Party getBorrowerParty(String borrowerId, CordaRPCOps rpcOps) {
+    public Party getCounterParty(String borrowerId, CordaRPCOps rpcOps) {
         if (borrowerId == null) {
             logger.info(
-                    "To issue new IoU, a borrower is needed. You can specify a unique search string with -borrower-id (using the borrower node Id would be a good idea), or select from the discovered list of parties below.");
+                    "To start MyInitiator, a counterparty is needed. You can specify a unique search string with -borrower-id (using the borrower node Id would be a good idea), or select from the discovered list of parties below.");
             borrowerId = "";
         }
         final Set<Party> parties = rpcOps.partiesFromName(borrowerId, false);
         Party borrower = null;
         if (parties.size() < 1) {
-            throw new IllegalArgumentException("Failed to find a network party that matches borrower");
+            throw new IllegalArgumentException("Failed to find a network party that matches counterparty");
         } else {
-            logger.info("Found {} parties in the network matching the borrower id {}", parties.size(), borrowerId);
+            logger.info("Found {} parties in the network matching the counterparty id {}", parties.size(), borrowerId);
             if (borrowerId == "") {
                 logger.info("Pick from the following parties:");
                 final ArrayList<Party> selections = new ArrayList<Party>();
@@ -51,12 +51,12 @@ public class FooClient {
                 borrower = parties.iterator().next();
             }
         }
-        logger.info("Borrower party: {}", borrower.toString());
+        logger.info("counterparty party: {}", borrower.toString());
         return borrower;
     }
 
     public boolean startMyflow(Party cpty, final Integer value,  CordaRPCOps rpcOps) {
-        logger.info("Initiating the IoU flow...");
+        logger.info("Initiating the MyInitiatorFlow...");
         CordaFuture<Void> future;
         try {
             FlowHandle<Void> flowHandle = null;
