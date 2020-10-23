@@ -26,6 +26,7 @@ import java.util.concurrent.Future;
 import com.timgroup.statsd.NonBlockingStatsDClient;
 import com.timgroup.statsd.StatsDClient;
 
+import net.corda.core.node.services.Vault;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -97,8 +98,8 @@ public class MainClient implements Callable<Integer> {
             Party borrower = c.getCounterParty(cpty, connection.getProxy());
 
             List<Worker> tasks = new ArrayList<Worker>();
-            for (int i=0; i<workers; i++) {
-                Worker w = new Worker(borrower, value, loops, c, connection, i+1, statsd);
+            for (int i = 0; i < workers; i++) {
+                Worker w = new Worker(borrower, value, loops, c, connection, i + 1, statsd);
                 tasks.add(w);
             }
 
@@ -106,12 +107,12 @@ public class MainClient implements Callable<Integer> {
             long start = System.currentTimeMillis();
             try {
                 results = executor.invokeAll(tasks);
-            } catch(InterruptedException e) {
+            } catch (InterruptedException e) {
                 e.printStackTrace();
             }
             long end = System.currentTimeMillis();
             executor.shutdown();
-         
+
             int totalSuccesses = 0;
             int totalFailures = 0;
             for (int i = 0; i < results.size(); i++) {
@@ -131,9 +132,20 @@ public class MainClient implements Callable<Integer> {
             System.out.printf("\tTotal failures: %s\n", totalFailures);
             System.out.printf("\tElapsed time: %s seconds\n", elapsedTime);
             System.out.printf("\tTPS: %s\n", (totalSuccesses + totalFailures) / elapsedTime);
-         }
+        } else if (subcommand.equals("query")) {
+            Future<String> result = this.queryTx(connection.getProxy(), txId);
+            result.get();
+        }
 
         return 0;
+    }
+
+    private Future<String> queryTx(CordaRPCOps rpcOps, String txId) {
+        return executor.submit(() -> {
+            FooClient rpc = new FooClient();
+            rpc.query(txId, rpcOps);
+            return "success";
+        });
     }
 
     public static void main(String[] args) {

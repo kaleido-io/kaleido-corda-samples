@@ -1,10 +1,8 @@
 package com.foo.examples.client.samples;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.Scanner;
-import java.util.Set;
+import java.util.*;
 
+import net.corda.core.node.services.Vault;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,7 +13,8 @@ import net.corda.core.concurrent.CordaFuture;
 import net.corda.core.identity.Party;
 import net.corda.core.messaging.CordaRPCOps;
 import net.corda.core.messaging.FlowHandle;
-import net.corda.core.transactions.SignedTransaction;
+import net.corda.core.contracts.StateAndRef;
+import net.corda.core.contracts.TransactionState;
 
 public class FooClient {
     private static final Logger logger = LoggerFactory.getLogger(FooClient.class);
@@ -55,6 +54,26 @@ public class FooClient {
         return borrower;
     }
 
+    public void query(final String txId, CordaRPCOps rpcOps) {
+        try {
+            Vault.Page<MyState1> result = rpcOps.vaultQuery(MyState1.class);
+            final List<StateAndRef<MyState1>> states = result.getStates();
+            logger.info("Number of MyFlowInitiator transactions returned from query: {}", states.size());
+            for (final StateAndRef<MyState1> state : states) {
+                final TransactionState<MyState1> s = state.getState();
+                if (txId == null) {
+                    logger.info("Id: {}", state.getRef().getTxhash());
+                    printStateDetails(s);
+                } else if (state.getRef().getTxhash().toString().equals(txId)) {
+                    logger.info("Found transaction by hash: {}", txId);
+                    printStateDetails(s);
+                }
+            }
+        } catch (final Exception e) {
+            logger.error("Failed", e);
+        }
+    }
+
     public boolean startMyflow(Party cpty, final Integer value,  CordaRPCOps rpcOps) {
         logger.info("Initiating the MyInitiatorFlow...");
         CordaFuture<Void> future;
@@ -72,5 +91,13 @@ public class FooClient {
             return false;
         }
         return true;
+    }
+
+    private static void printStateDetails(final TransactionState<MyState1> s) {
+        logger.info("\tNotary: {}", s.getNotary());
+        logger.info("\tValue: {}", s.getData().getValue());
+        logger.info("\tSender: {}", s.getData().getSender());
+        logger.info("\tReceiver: {}", s.getData().getReceiver());
+        logger.info("\tMsg: {}", s.getData().getMsg());
     }
 }
