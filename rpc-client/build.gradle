@@ -22,12 +22,12 @@ dependencies {
     compile "info.picocli:picocli:4.2.0"
     compile "com.timgroup:java-statsd-client:3.0.1"
 
-    cordapp project(':iou-contract')
-    cordapp project(':iou-flow')
+    cordapp project(':foo-contract')
+    cordapp project(':foo-flow')
     // Use JUnit test framework
     testImplementation 'junit:junit:4.12'
 }
 
 // Define the main class for the application
-mainClassName = 'io.kaleido.KaleidoClient'
+mainClassName = 'com.foo.examples.client.MainClient'
 cordapp.signing.enabled false
