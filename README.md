@@ -26,15 +26,15 @@ To build everything:
 ```
 
 The output are in these folders:
-- `iou-contract/build/libs/iou-contract-1.0.jar`
-- `iou-flow/build/libs/iou-flow-1.0.jar`
+- `iou-contract/build/libs/foo-contract-1.0.jar`
+- `iou-flow/build/libs/foo-flow-1.0.jar`
 - `rpc-client/build/install/bin/rpc-client`
 
 To build each component separately:
 
 ```
-./gradlew :iou-contract:build
-./gradlew :iou-flow:build
+./gradlew :foo-contract:build
+./gradlew :foo-flow:build
 ./gradlew :rpc-client:build
 ./gradlew :rpc-client:installDist
 ```
@@ -58,15 +58,15 @@ The program supports the following commands and switches:
 
 | Command | Parameter | Usage |
 |---------|-----------|-------|
-| issue | | Issue a new IoU |
+| start | | Start a new flow|
 |       | `-u`, `--url`| URL of the target Corda node or the local Kaleido bridge endpoint |
 |       | `-n`, `--username`| username for authentiation |
 |       | `-p`, `--password`| password for authentiation |
-|       | `-b`, `--borrower-id`| Name of the borrower to issue the IoU to, can be a partial search string |
-|       | `-v`, `--value`| Value of the issued IoU contract |
+|       | `-c`, `--counter-party`| Name of the counterparty to start flow with, can be a partial search string |
+|       | `-v`, `--value`| Value of passed for contract |
 |       | `-w`, `--workers`| Number of concurrent workers, default 1 |
 |       | `-l`, `--loops`| Loops each worker executes before exiting, default 1 (0=infinite) |
-| query | | Query a past IoU issuance transaction |
+| query | | Query a past transaction |
 |       | `-u`, `--url`| URL of the target Corda node or the local Kaleido bridge endpoint |
 |       | `-n`, `--username`| username for authentiation |
 |       | `-p`, `--password`| password for authentiation |
