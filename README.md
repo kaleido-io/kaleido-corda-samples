@@ -66,6 +66,14 @@ The program supports the following commands and switches:
 |       | `-v`, `--value`| Value of the issued IoU contract |
 |       | `-w`, `--workers`| Number of concurrent workers, default 1 |
 |       | `-l`, `--loops`| Loops each worker executes before exiting, default 1 (0=infinite) |
+| settle| | Settle an existing IoU |
+|       | `-u`, `--url`| URL of the target Corda node or the local Kaleido bridge endpoint |
+|       | `-n`, `--username`| username for authentiation |
+|       | `-p`, `--password`| password for authentiation |
+|       | `-b`, `--borrower-id`| Name of the counter party to settle Iou with, can be a partial search string |
+|       | `-s`, `--linear-id`| Linear id of the IoU to settle |
+|       | `-w`, `--workers`| Number of concurrent workers, default 1 |
+|       | `-l`, `--loops`| Loops each worker executes before exiting, default 1 (0=infinite) |
 | query | | Query a past IoU issuance transaction |
 |       | `-u`, `--url`| URL of the target Corda node or the local Kaleido bridge endpoint |
 |       | `-n`, `--username`| username for authentiation |

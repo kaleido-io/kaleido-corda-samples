@@ -46,7 +46,7 @@ import picocli.CommandLine.Parameters;
 @Command(name = "kldc", mixinStandardHelpOptions = true, version = "1.0",
          description = "Kaleido Client for submitting transactions to Corda networks.")
 public class KaleidoClient implements Callable<Integer> {
-    @Parameters(index = "0", description = "issue, query")
+    @Parameters(index = "0", description = "issue, query, settle")
     private String subcommand;
 
     @Option(names = {"-u", "--url"}, description = "URL of the target Corda node or the local Kaleido bridge endpoint")
@@ -72,6 +72,9 @@ public class KaleidoClient implements Callable<Integer> {
     
     @Option(names = {"-i", "--tx-id"}, description = "Transaction id of an existing transaction")
     private String txId;
+
+    @Option(names = {"-s", "--linear-id"}, description = "linear id of an IOU to settle")
+    private String linearId;
     
     @Option(names = {"-m", "--metrics-server"}, description = "URL of the statsd metrics server, such as Telegraf, to submit metrics data to")
     private String metricsServer;
@@ -134,7 +137,46 @@ public class KaleidoClient implements Callable<Integer> {
             System.out.printf("\tTotal failures: %s\n", totalFailures);
             System.out.printf("\tElapsed time: %s seconds\n", elapsedTime);
             System.out.printf("\tTPS: %s\n", (totalSuccesses + totalFailures) / elapsedTime);
-         } else if (subcommand.equals("query")) {
+        } else if(subcommand.equals("settle")) {
+            // prepare with possibly prompting users for the borrower party
+            IOUClient c = new IOUClient();
+            Party otherParty = c.getBorrowerParty(borrowerId, connection.getProxy());
+
+            List<SettleWorker> tasks = new ArrayList<SettleWorker>();
+            for (int i=0; i<workers; i++) {
+                SettleWorker w = new SettleWorker(otherParty, linearId, loops, iouClient, connection, i+1, statsd);
+                tasks.add(w);
+            }
+
+            List<Future<Result>> results = null;
+            long start = System.currentTimeMillis();
+            try {
+                results = executor.invokeAll(tasks);
+            } catch(InterruptedException e) {
+                e.printStackTrace();
+            }
+            long end = System.currentTimeMillis();
+            executor.shutdown();
+
+            int totalSuccesses = 0;
+            int totalFailures = 0;
+            for (int i = 0; i < results.size(); i++) {
+                Future<Result> future = results.get(i);
+                try {
+                    Result result = future.get();
+                    totalSuccesses += result.getSuccesses();
+                    totalFailures += result.getFailures();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            long elapsedTime = (end - start) / 1000;
+            System.out.println("\n========Printing the results======");
+            System.out.printf("\tTotal successes: %s\n", totalSuccesses);
+            System.out.printf("\tTotal failures: %s\n", totalFailures);
+            System.out.printf("\tElapsed time: %s seconds\n", elapsedTime);
+        } else if (subcommand.equals("query")) {
             Future<String> result = this.queryTx(connection.getProxy(), txId);
             result.get();
         }

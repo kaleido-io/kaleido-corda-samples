@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Scanner;
 import java.util.Set;
 
+import io.kaleido.samples.flow.SettleIOUFlow;
+import net.corda.core.contracts.UniqueIdentifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -83,6 +85,38 @@ public class IOUClient {
                 logger.info("Signed tx: {}", result);
                 final String msg = result.getTx().getOutputStates().get(0).toString();
                 logger.info(msg);
+            } catch(final Exception e) {
+                logger.error("Failed to get transaction state", e);
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    public boolean settleIoU(Party otherParty, String id, CordaRPCOps rpcOps) {
+        logger.info("Initiating the settle IoU flow...");
+        final UniqueIdentifier linearId = UniqueIdentifier.Companion.fromString(id);
+        CordaFuture<SignedTransaction> future;
+        try {
+            FlowHandle<SignedTransaction> flowHandle = null;
+            try {
+                flowHandle = rpcOps.startFlowDynamic(SettleIOUFlow.Initiator.class, linearId, otherParty);
+            } catch (final CordaRuntimeException cre) {
+                logger.error("Failed to start the flow", cre);
+            }
+
+            logger.info("Started flow, handle: {}", flowHandle.toString());
+            future = flowHandle.getReturnValue();
+        } catch (final Exception e) {
+            logger.error("Failed", e);
+            return false;
+        }
+
+        if (future != null) {
+            try {
+                final SignedTransaction result = future.get();
+                logger.info("Signed tx: {}", result);
             } catch(final Exception e) {
                 logger.error("Failed to get transaction state", e);
                 return false;
