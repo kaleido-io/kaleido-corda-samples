@@ -13,10 +13,10 @@ plugins {
 
 dependencies {
     // these dependencies will be included in the contract jar
-    cordaRuntime 'net.corda:corda:4.4'
+    cordaRuntime 'net.corda:corda:4.8'
 
     // these dependencies will NOT be included in the contract jar
-    cordaCompile 'net.corda:corda-core:4.4'
+    cordaCompile 'net.corda:corda-core:4.8'
     // This dependency is used internally, and not exposed to consumers on their own compile classpath.
     implementation 'com.google.guava:guava:26.0-jre'
 
@@ -25,8 +25,8 @@ dependencies {
 }
 
 cordapp {
-    targetPlatformVersion 4
-    minimumPlatformVersion 4
+    targetPlatformVersion 10
+    minimumPlatformVersion 6
     contract {
         name "IoU Contract"
         vendor "Kaleido Open Source"
