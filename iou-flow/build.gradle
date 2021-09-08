@@ -13,7 +13,7 @@ plugins {
 
 cordapp {
     targetPlatformVersion 10
-    minimumPlatformVersion 6
+    minimumPlatformVersion 10
     workflow {
         name "IoU Flow"
         vendor "Kaleido Open Source"

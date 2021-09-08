@@ -26,7 +26,7 @@ dependencies {
 
 cordapp {
     targetPlatformVersion 10
-    minimumPlatformVersion 6
+    minimumPlatformVersion 10
     contract {
         name "IoU Contract"
         vendor "Kaleido Open Source"
