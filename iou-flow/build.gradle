@@ -12,8 +12,8 @@ plugins {
 }
 
 cordapp {
-    targetPlatformVersion 4
-    minimumPlatformVersion 4
+    targetPlatformVersion 10
+    minimumPlatformVersion 10
     workflow {
         name "IoU Flow"
         vendor "Kaleido Open Source"
@@ -24,7 +24,7 @@ cordapp {
 
 dependencies {
     // these dependencies will NOT be included in the contract jar
-    cordaCompile 'net.corda:corda-core:4.4'
+    cordaCompile 'net.corda:corda-core:4.8'
     // This dependency is used internally, and not exposed to consumers on their own compile classpath.
     implementation 'com.google.guava:guava:26.0-jre'
 

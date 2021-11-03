@@ -15,9 +15,9 @@ plugins {
 }
 
 dependencies {
-    compile 'net.corda:corda-core:4.4'
-    compile "net.corda:corda-rpc:4.4"
-    compile 'net.corda:corda:4.4'
+    compile 'net.corda:corda-core:4.8'
+    compile "net.corda:corda-rpc:4.8"
+    compile 'net.corda:corda:4.8'
     compile "org.slf4j:slf4j-simple:1.7.30"
     compile "info.picocli:picocli:4.2.0"
     compile "com.timgroup:java-statsd-client:3.0.1"

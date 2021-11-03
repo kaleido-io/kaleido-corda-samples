@@ -1,11 +1,11 @@
 # Kaleido sample code for Corda
 
-Sample code for development components of a Corda App: contracts, flows and rpc-clients, based on JDK 11
+Sample code for development components of a Corda App: contracts, flows and rpc-clients, based on JDK 8
 
 © Copyright 2020 Kaleido
 
 ## Pre-reqs
-- JDK 11 (such as from [https://adoptopenjdk.net/](https://gradle.org/install/))
+- JDK 8 (such as from [https://adoptopenjdk.net/](https://gradle.org/install/))
 - gradle ([https://gradle.org/install/](https://gradle.org/install/))
 
 ## Set up the target Corda network
