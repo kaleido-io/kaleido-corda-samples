@@ -5,7 +5,7 @@ Sample code for development components of a Corda App: contracts, flows and rpc-
 © Copyright 2020 Kaleido
 
 ## Pre-reqs
-- JDK 8 (such as from [https://adoptopenjdk.net/](https://gradle.org/install/))
+- JDK 8 (such as from [https://adoptopenjdk.net/](https://adoptopenjdk.net/)
 - gradle ([https://gradle.org/install/](https://gradle.org/install/))
 
 ## Set up the target Corda network
