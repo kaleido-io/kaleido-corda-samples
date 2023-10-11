@@ -8,9 +8,9 @@ allprojects {
   repositories {
       jcenter()
       maven {
-          url 'https://software.r3.com/artifactory/corda-dependencies'
-          url 'https://software.r3.com/artifactory/corda/'
-      }
+          url 'https://download.corda.net/maven/corda-dependencies'
+          }
+      maven { url 'https://download.corda.net/maven/corda/' }
   }
 
   // Corda serialization requires function parameter names to be included in the class file
